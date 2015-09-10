@@ -1,4 +1,4 @@
-package protoserver
+package protoserver // import "go.pedge.io/proto/server"
 
 import (
 	"errors"
@@ -7,7 +7,7 @@ import (
 	"net"
 	"net/http"
 
-	"go.pedge.io/protoutil/version"
+	"go.pedge.io/proto/version"
 
 	"golang.org/x/net/context"
 

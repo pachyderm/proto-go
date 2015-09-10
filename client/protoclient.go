@@ -1,4 +1,4 @@
-package protoclient
+package protoclient // import "go.pedge.io/proto/client"
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"golang.org/x/net/context"
 
 	"go.pedge.io/google-protobuf"
-	"go.pedge.io/protoutil/version"
+	"go.pedge.io/proto/version"
 
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"

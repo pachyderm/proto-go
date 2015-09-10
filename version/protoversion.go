@@ -1,4 +1,4 @@
-package protoversion
+package protoversion // import "go.pedge.io/proto/version"
 
 import "fmt"
 

@@ -1,4 +1,4 @@
-package protostream
+package protostream // import "go.pedge.io/proto/stream"
 
 import (
 	"bufio"

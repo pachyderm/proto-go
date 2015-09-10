@@ -1,4 +1,4 @@
-package prototime
+package prototime // import "go.pedge.io/proto/time"
 
 import (
 	"time"
