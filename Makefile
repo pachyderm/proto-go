@@ -56,4 +56,4 @@ clean:
 
 proto:
 	go get -v go.pedge.io/tools/protoc-all
-	STRIP_PACKAGE_COMMENTS=1 protoc-all go.pedge.io/protoutil
+	STRIP_PACKAGE_COMMENTS=1 protoc-all go.pedge.io/proto
