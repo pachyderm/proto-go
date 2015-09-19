@@ -32,6 +32,7 @@ type ServeOptions struct {
 	TracePort        uint16
 	Version          *protoversion.Version
 	HTTPRegisterFunc func(context.Context, *runtime.ServeMux, *grpc.ClientConn) error
+	ConnState        func(net.Conn, http.ConnState)
 }
 
 // Serve serves stuff.
@@ -102,7 +103,12 @@ func Serve(
 				return err
 			}
 		}
-		go func() { errC <- http.ListenAndServe(fmt.Sprintf(":%d", opts.HTTPPort), mux) }()
+		httpServer := &http.Server{
+			Addr:      fmt.Sprintf(":%d", opts.HTTPPort),
+			Handler:   mux,
+			ConnState: opts.ConnState,
+		}
+		go func() { errC <- httpServer.ListenAndServe() }()
 	}
 	protolog.Info(
 		&ServerStarted{
