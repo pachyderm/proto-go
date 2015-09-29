@@ -88,6 +88,7 @@ func Serve(
 	}
 	if (opts.HTTPPort != 0 || opts.HTTPAddress != "") && (opts.Version != nil || opts.HTTPRegisterFunc != nil) {
 		defer glog.Flush()
+		time.Sleep(1 * time.Second)
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
 		var mux *runtime.ServeMux
