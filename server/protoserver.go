@@ -85,10 +85,21 @@ func Serve(
 	if err != nil {
 		return err
 	}
-	errC := make(chan error)
-	go func() { errC <- s.Serve(listener) }()
+	grpcErrC := make(chan error)
+	grpcDebugErrC := make(chan error)
+	httpErrC := make(chan error)
+	errCCount := 1
+	go func() { grpcErrC <- s.Serve(listener) }()
 	if opts.DebugPort != 0 {
-		go func() { errC <- http.ListenAndServe(fmt.Sprintf(":%d", opts.DebugPort), nil) }()
+		errCCount++
+		debugServer := &graceful.Server{
+			Timeout: 1 * time.Second,
+			Server: &http.Server{
+				Addr:    fmt.Sprintf(":%d", opts.DebugPort),
+				Handler: http.DefaultServeMux,
+			},
+		}
+		go func() { grpcDebugErrC <- debugServer.ListenAndServe() }()
 	}
 	if (opts.HTTPPort != 0 || opts.HTTPAddress != "") && (opts.Version != nil || opts.HTTPRegisterFunc != nil) {
 		time.Sleep(1 * time.Second)
@@ -147,11 +158,12 @@ func Serve(
 		if opts.Start != nil {
 			close(opts.Start)
 		}
+		errCCount++
 		go func() {
 			if opts.HTTPListener != nil {
-				errC <- gracefulServer.Serve(listener)
+				httpErrC <- gracefulServer.Serve(opts.HTTPListener)
 			} else {
-				errC <- gracefulServer.ListenAndServe()
+				httpErrC <- gracefulServer.ListenAndServe()
 			}
 		}()
 	}
@@ -163,5 +175,37 @@ func Serve(
 			HttpAddress: opts.HTTPAddress,
 		},
 	)
-	return <-errC
+	var errs []error
+	grpcStopped := false
+	for i := 0; i < errCCount; i++ {
+		select {
+		case grpcErr := <-grpcErrC:
+			if grpcErr != nil {
+				errs = append(errs, fmt.Errorf("grpc error: %s", grpcErr.Error()))
+			}
+			grpcStopped = true
+		case grpcDebugErr := <-grpcDebugErrC:
+			if grpcDebugErr != nil {
+				errs = append(errs, fmt.Errorf("grpc debug error: %s", grpcDebugErr.Error()))
+			}
+			if !grpcStopped {
+				s.Stop()
+				_ = listener.Close()
+				grpcStopped = true
+			}
+		case httpErr := <-httpErrC:
+			if httpErr != nil {
+				errs = append(errs, fmt.Errorf("http error: %s", httpErr.Error()))
+			}
+			if !grpcStopped {
+				s.Stop()
+				_ = listener.Close()
+				grpcStopped = true
+			}
+		}
+	}
+	if len(errs) > 0 {
+		return fmt.Errorf("%v", errs)
+	}
+	return nil
 }
