@@ -41,6 +41,7 @@ type ServeOptions struct {
 	HTTPListener    net.Listener
 	ServeMuxOptions []runtime.ServeMuxOption
 	CleanupFunc     func()
+	Start           chan struct{}
 }
 
 // Serve serves stuff.
@@ -142,6 +143,9 @@ func Serve(
 				}
 			},
 			Server: httpServer,
+		}
+		if opts.Start != nil {
+			close(opts.Start)
 		}
 		go func() {
 			if opts.HTTPListener != nil {
