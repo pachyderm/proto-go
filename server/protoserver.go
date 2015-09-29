@@ -24,6 +24,8 @@ var (
 	ErrMustSpecifyPort = errors.New("must specify port")
 	// ErrMustSpecifyRegisterFunc is the error if no registerFunc is specifed to Serve.
 	ErrMustSpecifyRegisterFunc = errors.New("must specify registerFunc")
+	// ErrCannotSpecifyBothHTTPPortAndHTTPAddress is the error if both HTTPPort and HTTPAddress are specified in ServeOptions.
+	ErrCannotSpecifyBothHTTPPortAndHTTPAddress = errors.New("cannot specify both HTTPPort and HTTPAddress")
 )
 
 // ServeOptions represent optional fields for serving.
@@ -32,6 +34,9 @@ type ServeOptions struct {
 	DebugPort        uint16
 	Version          *protoversion.Version
 	HTTPRegisterFunc func(context.Context, *runtime.ServeMux, *grpc.ClientConn) error
+	// either HTTPPort or HTTPAddress can be set, but not both
+	HTTPAddress  string
+	HTTPListener net.Listener
 }
 
 // Serve serves stuff.
@@ -63,6 +68,9 @@ func Serve(
 	if registerFunc == nil {
 		return ErrMustSpecifyRegisterFunc
 	}
+	if opts.HTTPPort != 0 && opts.HTTPAddress != "" {
+		return ErrCannotSpecifyBothHTTPPortAndHTTPAddress
+	}
 	s := grpc.NewServer(grpc.MaxConcurrentStreams(math.MaxUint32))
 	registerFunc(s)
 	if opts.Version != nil {
@@ -77,7 +85,7 @@ func Serve(
 	if opts.DebugPort != 0 {
 		go func() { errC <- http.ListenAndServe(fmt.Sprintf(":%d", opts.DebugPort), nil) }()
 	}
-	if opts.HTTPPort != 0 && (opts.Version != nil || opts.HTTPRegisterFunc != nil) {
+	if (opts.HTTPPort != 0 || opts.HTTPAddress != "") && (opts.Version != nil || opts.HTTPRegisterFunc != nil) {
 		defer glog.Flush()
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
@@ -102,17 +110,28 @@ func Serve(
 				return err
 			}
 		}
+		httpAddress := fmt.Sprintf(":%d", opts.HTTPPort)
+		if opts.HTTPAddress != "" {
+			httpAddress = opts.HTTPAddress
+		}
 		httpServer := &http.Server{
-			Addr:    fmt.Sprintf(":%d", opts.HTTPPort),
+			Addr:    httpAddress,
 			Handler: mux,
 		}
-		go func() { errC <- httpServer.ListenAndServe() }()
+		go func() {
+			if opts.HTTPListener != nil {
+				errC <- httpServer.Serve(listener)
+			} else {
+				errC <- httpServer.ListenAndServe()
+			}
+		}()
 	}
 	protolog.Info(
 		&ServerStarted{
-			Port:      uint32(port),
-			HttpPort:  uint32(opts.HTTPPort),
-			DebugPort: uint32(opts.DebugPort),
+			Port:        uint32(port),
+			HttpPort:    uint32(opts.HTTPPort),
+			DebugPort:   uint32(opts.DebugPort),
+			HttpAddress: opts.HTTPAddress,
 		},
 	)
 	return <-errC
