@@ -35,8 +35,9 @@ type ServeOptions struct {
 	Version          *protoversion.Version
 	HTTPRegisterFunc func(context.Context, *runtime.ServeMux, *grpc.ClientConn) error
 	// either HTTPPort or HTTPAddress can be set, but not both
-	HTTPAddress  string
-	HTTPListener net.Listener
+	HTTPAddress     string
+	HTTPListener    net.Listener
+	ServeMuxOptions []runtime.ServeMuxOption
 }
 
 // Serve serves stuff.
@@ -89,7 +90,12 @@ func Serve(
 		defer glog.Flush()
 		ctx, cancel := context.WithCancel(context.Background())
 		defer cancel()
-		mux := runtime.NewServeMux()
+		var mux *runtime.ServeMux
+		if len(opts.ServeMuxOptions) == 0 {
+			mux = runtime.NewServeMux()
+		} else {
+			mux = runtime.NewServeMux(opts.ServeMuxOptions...)
+		}
 		conn, err := grpc.Dial(fmt.Sprintf("0.0.0.0:%d", port), grpc.WithInsecure())
 		if err != nil {
 			return err
