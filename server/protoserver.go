@@ -29,10 +29,9 @@ var (
 // ServeOptions represent optional fields for serving.
 type ServeOptions struct {
 	HTTPPort         uint16
-	TracePort        uint16
+	DebugPort        uint16
 	Version          *protoversion.Version
 	HTTPRegisterFunc func(context.Context, *runtime.ServeMux, *grpc.ClientConn) error
-	ConnState        func(net.Conn, http.ConnState)
 }
 
 // Serve serves stuff.
@@ -75,8 +74,8 @@ func Serve(
 	}
 	errC := make(chan error)
 	go func() { errC <- s.Serve(listener) }()
-	if opts.TracePort != 0 {
-		go func() { errC <- http.ListenAndServe(fmt.Sprintf(":%d", opts.TracePort), nil) }()
+	if opts.DebugPort != 0 {
+		go func() { errC <- http.ListenAndServe(fmt.Sprintf(":%d", opts.DebugPort), nil) }()
 	}
 	if opts.HTTPPort != 0 && (opts.Version != nil || opts.HTTPRegisterFunc != nil) {
 		defer glog.Flush()
@@ -104,9 +103,8 @@ func Serve(
 			}
 		}
 		httpServer := &http.Server{
-			Addr:      fmt.Sprintf(":%d", opts.HTTPPort),
-			Handler:   mux,
-			ConnState: opts.ConnState,
+			Addr:    fmt.Sprintf(":%d", opts.HTTPPort),
+			Handler: mux,
 		}
 		go func() { errC <- httpServer.ListenAndServe() }()
 	}
@@ -114,7 +112,7 @@ func Serve(
 		&ServerStarted{
 			Port:      uint32(port),
 			HttpPort:  uint32(opts.HTTPPort),
-			TracePort: uint32(opts.TracePort),
+			DebugPort: uint32(opts.DebugPort),
 		},
 	)
 	return <-errC

@@ -17,7 +17,7 @@ var _ = math.Inf
 type ServerStarted struct {
 	Port      uint32 `protobuf:"varint,1,opt,name=port" json:"port,omitempty"`
 	HttpPort  uint32 `protobuf:"varint,2,opt,name=http_port" json:"http_port,omitempty"`
-	TracePort uint32 `protobuf:"varint,3,opt,name=trace_port" json:"trace_port,omitempty"`
+	DebugPort uint32 `protobuf:"varint,3,opt,name=debug_port" json:"debug_port,omitempty"`
 }
 
 func (m *ServerStarted) Reset()         { *m = ServerStarted{} }
