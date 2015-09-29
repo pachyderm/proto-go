@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"time"
 
+	"gopkg.in/tylerb/graceful.v1"
+
 	"go.pedge.io/proto/time"
 	"go.pedge.io/proto/version"
 	"go.pedge.io/protolog"
@@ -38,6 +40,7 @@ type ServeOptions struct {
 	HTTPAddress     string
 	HTTPListener    net.Listener
 	ServeMuxOptions []runtime.ServeMuxOption
+	CleanupFunc     func()
 }
 
 // Serve serves stuff.
@@ -87,10 +90,8 @@ func Serve(
 		go func() { errC <- http.ListenAndServe(fmt.Sprintf(":%d", opts.DebugPort), nil) }()
 	}
 	if (opts.HTTPPort != 0 || opts.HTTPAddress != "") && (opts.Version != nil || opts.HTTPRegisterFunc != nil) {
-		defer glog.Flush()
 		time.Sleep(1 * time.Second)
 		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
 		var mux *runtime.ServeMux
 		if len(opts.ServeMuxOptions) == 0 {
 			mux = runtime.NewServeMux()
@@ -99,6 +100,8 @@ func Serve(
 		}
 		conn, err := grpc.Dial(fmt.Sprintf("0.0.0.0:%d", port), grpc.WithInsecure())
 		if err != nil {
+			glog.Flush()
+			cancel()
 			return err
 		}
 		go func() {
@@ -108,12 +111,16 @@ func Serve(
 		if opts.Version != nil {
 			if err := protoversion.RegisterAPIHandler(ctx, mux, conn); err != nil {
 				_ = conn.Close()
+				glog.Flush()
+				cancel()
 				return err
 			}
 		}
 		if opts.HTTPRegisterFunc != nil {
 			if err := opts.HTTPRegisterFunc(ctx, mux, conn); err != nil {
 				_ = conn.Close()
+				glog.Flush()
+				cancel()
 				return err
 			}
 		}
@@ -125,11 +132,22 @@ func Serve(
 			Addr:    httpAddress,
 			Handler: mux,
 		}
+		gracefulServer := &graceful.Server{
+			Timeout: 1 * time.Second,
+			ShutdownInitiated: func() {
+				glog.Flush()
+				cancel()
+				if opts.CleanupFunc != nil {
+					opts.CleanupFunc()
+				}
+			},
+			Server: httpServer,
+		}
 		go func() {
 			if opts.HTTPListener != nil {
-				errC <- httpServer.Serve(listener)
+				errC <- gracefulServer.Serve(listener)
 			} else {
-				errC <- httpServer.ListenAndServe()
+				errC <- gracefulServer.ListenAndServe()
 			}
 		}()
 	}
