@@ -1,18 +1,3 @@
-.PHONY: \
-	all \
-	deps \
-	updatedeps \
-	testdeps \
-	updatetestdeps \
-	build \
-	lint \
-	vet \
-	errcheck \
-	pretest \
-	test \
-	clean \
-	proto
-
 all: test
 
 deps:
@@ -29,6 +14,9 @@ updatetestdeps:
 
 build: deps
 	go build ./...
+
+install: deps
+	go install ./...
 
 lint: testdeps
 	go get -v github.com/golang/lint/golint
@@ -52,8 +40,24 @@ test: testdeps pretest
 	go test -test.v ./...
 
 clean:
-	go clean ./...
+	go clean -i ./...
 
 proto:
 	go get -v go.pedge.io/tools/protoc-all
 	STRIP_PACKAGE_COMMENTS=1 protoc-all go.pedge.io/proto
+
+.PHONY: \
+	all \
+	deps \
+	updatedeps \
+	testdeps \
+	updatetestdeps \
+	build \
+	install \
+	lint \
+	vet \
+	errcheck \
+	pretest \
+	test \
+	clean \
+	proto
