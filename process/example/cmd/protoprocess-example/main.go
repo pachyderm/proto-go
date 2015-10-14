@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"go.pedge.io/env"
@@ -28,10 +27,16 @@ func main() {
 func do(appEnvObj interface{}) error {
 	appEnv := appEnvObj.(*appEnv)
 	protolog.SetLevel(protolog.Level_LEVEL_DEBUG)
-	if len(os.Args) != 2 {
-		return fmt.Errorf("usage: %s /path/to/dir", os.Args[1])
+	var dirPath string
+	var err error
+	if len(os.Args) >= 2 {
+		dirPath = os.Args[1]
+	} else {
+		dirPath, err = os.Getwd()
+		if err != nil {
+			return err
+		}
 	}
-	dirPath := os.Args[1]
 	clientConn, err := grpc.Dial(appEnv.Address, grpc.WithInsecure())
 	if err != nil {
 		return err
