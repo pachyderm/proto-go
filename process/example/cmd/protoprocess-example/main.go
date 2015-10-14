@@ -7,12 +7,13 @@ import (
 	"go.pedge.io/env"
 	"go.pedge.io/pkg/archive"
 	"go.pedge.io/proto/process"
+	"go.pedge.io/protolog"
 	"google.golang.org/grpc"
 )
 
 var (
 	defaultEnv = map[string]string{
-		"ADDRESS": "0.0.0.0:678",
+		"ADDRESS": "0.0.0.0:1678",
 	}
 )
 
@@ -26,6 +27,7 @@ func main() {
 
 func do(appEnvObj interface{}) error {
 	appEnv := appEnvObj.(*appEnv)
+	protolog.SetLevel(protolog.Level_LEVEL_DEBUG)
 	if len(os.Args) != 2 {
 		return fmt.Errorf("usage: %s /path/to/dir", os.Args[1])
 	}

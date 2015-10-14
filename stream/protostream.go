@@ -24,6 +24,12 @@ type StreamingBytesServer interface {
 	Send(bytesValue *google_protobuf.BytesValue) error
 }
 
+// StreamingBytesServeCloser is a StreamingBytesServer with close.
+type StreamingBytesServeCloser interface {
+	StreamingBytesServer
+	CloseSend() error
+}
+
 // StreamingBytesClient represents a client for an rpc method of the form:
 //   rpc Foo(Bar) returns (stream google.protobuf.BytesValue) {}
 type StreamingBytesClient interface {
@@ -34,6 +40,12 @@ type StreamingBytesClient interface {
 type StreamingBytesDuplexer interface {
 	StreamingBytesClient
 	StreamingBytesServer
+}
+
+// StreamingBytesDuplexCloser is a StreamingBytesDuplexer with close.
+type StreamingBytesDuplexCloser interface {
+	StreamingBytesClient
+	StreamingBytesServeCloser
 }
 
 // StreamingBytesClientHandler handles a StreamingBytesClient.

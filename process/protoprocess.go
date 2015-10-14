@@ -25,7 +25,7 @@ func NewAPIProcessor(client Client, apiClient APIClient) Processor {
 
 // Client calls a remote Processor.
 type Client interface {
-	Process(dirPath string, streamingBytesDuplexer protostream.StreamingBytesDuplexer) error
+	Process(dirPath string, streamingBytesDuplexCloser protostream.StreamingBytesDuplexCloser) error
 }
 
 // ClientOptions are options to the construction of a Client.

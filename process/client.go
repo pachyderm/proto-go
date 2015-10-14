@@ -16,7 +16,7 @@ func newClient(archiver pkgarchive.Archiver, opts ClientOptions) *client {
 	return &client{archiver, opts}
 }
 
-func (c *client) Process(dirPath string, streamingBytesDuplexer protostream.StreamingBytesDuplexer) (retErr error) {
+func (c *client) Process(dirPath string, streamingBytesDuplexCloser protostream.StreamingBytesDuplexCloser) (retErr error) {
 	readCloser, err := c.archiver.Compress(dirPath)
 	if err != nil {
 		return err
@@ -26,11 +26,14 @@ func (c *client) Process(dirPath string, streamingBytesDuplexer protostream.Stre
 			retErr = err
 		}
 	}()
-	if err := send(readCloser, streamingBytesDuplexer, c.getChunkSizeBytes()); err != nil {
+	if err := send(readCloser, streamingBytesDuplexCloser, c.getChunkSizeBytes()); err != nil {
+		return err
+	}
+	if err := streamingBytesDuplexCloser.CloseSend(); err != nil {
 		return err
 	}
 	buffer := bytes.NewBuffer(nil)
-	if err := recv(buffer, streamingBytesDuplexer, c.getChunkSizeBytes()); err != nil {
+	if err := recv(buffer, streamingBytesDuplexCloser, c.getChunkSizeBytes()); err != nil {
 		return err
 	}
 	return c.archiver.Decompress(buffer, dirPath)
