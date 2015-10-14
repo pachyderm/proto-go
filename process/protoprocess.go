@@ -1,17 +1,13 @@
 package protoprocess // import "go.pedge.io/proto/process"
 
 import (
-	"io"
-
+	"go.pedge.io/pkg/archive"
 	"go.pedge.io/proto/stream"
 )
 
 var (
-	// DefaultExcludePatternsFiles is the slice of file names
-	// that will contain patterns of files to exclude on upload.
-	DefaultExcludePatternsFiles = []string{
-		".protoprocessignore",
-	}
+	// DefaultChunkSizeBytes is the default chunk size used for sending and receiving.
+	DefaultChunkSizeBytes = 65536
 )
 
 // Processor processes the contents of a directory.
@@ -22,54 +18,42 @@ type Processor interface {
 	Process(dirPath string) error
 }
 
-// Compressor compresses and decompresses a directory.
-type Compressor interface {
-	Compress(dirPath string) (io.ReadCloser, error)
-	Decompress(reader io.Reader, dirPath string) error
-}
-
-// CompressorOptions are options to the construction of a Compressor.
-type CompressorOptions struct {
-	// If not set, DefaultExcludePatternsFiles is used.
-	ExcludePatternsFiles []string
-}
-
-// NewTarCompressor returns a new Compressor for tar.
-func NewTarCompressor(opts CompressorOptions) Compressor {
-	return newTarCompressor(opts)
+// NewAPIProcessor returns a new Processor that calls an APIClient.
+func NewAPIProcessor(client Client, apiClient APIClient) Processor {
+	return newAPIProcessor(client, apiClient)
 }
 
 // Client calls a remote Processor.
 type Client interface {
-	Process(
-		dirPath string,
-		streamingBytesServer protostream.StreamingBytesServer,
-	) error
+	Process(dirPath string, streamingBytesDuplexer protostream.StreamingBytesDuplexer) error
 }
 
 // ClientOptions are options to the construction of a Client.
 type ClientOptions struct {
+	ChunkSizeBytes int
 }
 
 // NewClient returns a new Client.
-func NewClient(compressor Compressor, opts ClientOptions) Client {
-	return newClient(compressor, opts)
+func NewClient(archiver pkgarchive.Archiver, opts ClientOptions) Client {
+	return newClient(archiver, opts)
 }
 
 // Server wraps a Processor.
 type Server interface {
-	Handle(
-		processor Processor,
-		streamingBytesClient protostream.StreamingBytesClient,
-		streamingBytesServer protostream.StreamingBytesServer,
-	) error
+	Handle(processor Processor, streamingBytesDuplexer protostream.StreamingBytesDuplexer) error
 }
 
 // ServerOptions are options to the construction of a Server.
 type ServerOptions struct {
+	ChunkSizeBytes int
 }
 
 // NewServer returns a new Server.
-func NewServer(compressor Compressor, opts ServerOptions) Server {
-	return newServer(compressor, opts)
+func NewServer(archiver pkgarchive.Archiver, opts ServerOptions) Server {
+	return newServer(archiver, opts)
+}
+
+// NewAPIServer returns a new APIServer for the given Server.
+func NewAPIServer(processor Processor, server Server) APIServer {
+	return newAPIServer(processor, server)
 }

@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+import "google/protobuf/wrappers.proto";
+
+package protoprocess;
+
+service API {
+  rpc Do(stream google.protobuf.BytesValue) returns (stream google.protobuf.BytesValue) {}
+}

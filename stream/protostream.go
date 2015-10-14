@@ -30,6 +30,12 @@ type StreamingBytesClient interface {
 	Recv() (*google_protobuf.BytesValue, error)
 }
 
+// StreamingBytesDuplexer is both a StreamingBytesClient and StreamingBytesServer.
+type StreamingBytesDuplexer interface {
+	StreamingBytesClient
+	StreamingBytesServer
+}
+
 // StreamingBytesClientHandler handles a StreamingBytesClient.
 type StreamingBytesClientHandler interface {
 	Handle(streamingBytesClient StreamingBytesClient) error
@@ -77,8 +83,7 @@ func RelayFromStreamingBytesClient(streamingBytesClient StreamingBytesClient, st
 
 // StreamingBytesRelayer represents both generated Clients and servers for streams of *google_protobuf.BytesValue.
 type StreamingBytesRelayer interface {
-	StreamingBytesClient
-	StreamingBytesServer
+	StreamingBytesDuplexer
 	Header() (metadata.MD, error)
 	Trailer() metadata.MD
 	CloseSend() error

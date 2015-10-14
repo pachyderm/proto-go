@@ -1,19 +1,44 @@
 package protoprocess
 
-import "go.pedge.io/proto/stream"
+import (
+	"bytes"
+
+	"go.pedge.io/pkg/archive"
+	"go.pedge.io/proto/stream"
+)
 
 type client struct {
-	compressor Compressor
-	opts       ClientOptions
+	archiver pkgarchive.Archiver
+	opts     ClientOptions
 }
 
-func newClient(compressor Compressor, opts ClientOptions) *client {
-	return &client{compressor, opts}
+func newClient(archiver pkgarchive.Archiver, opts ClientOptions) *client {
+	return &client{archiver, opts}
 }
 
-func (c *client) Process(
-	dirPath string,
-	streamingBytesServer protostream.StreamingBytesServer,
-) error {
-	return nil
+func (c *client) Process(dirPath string, streamingBytesDuplexer protostream.StreamingBytesDuplexer) (retErr error) {
+	readCloser, err := c.archiver.Compress(dirPath)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		if err := readCloser.Close(); err != nil && retErr == nil {
+			retErr = err
+		}
+	}()
+	if err := send(readCloser, streamingBytesDuplexer, c.getChunkSizeBytes()); err != nil {
+		return err
+	}
+	buffer := bytes.NewBuffer(nil)
+	if err := recv(buffer, streamingBytesDuplexer, c.getChunkSizeBytes()); err != nil {
+		return err
+	}
+	return c.archiver.Decompress(buffer, dirPath)
+}
+
+func (c *client) getChunkSizeBytes() int {
+	if c.opts.ChunkSizeBytes > 0 {
+		return c.opts.ChunkSizeBytes
+	}
+	return DefaultChunkSizeBytes
 }
