@@ -78,8 +78,8 @@ func (p *plugin) setParameters(parameters string) error {
 }
 
 func (p *plugin) getCodeGeneratorResponseFiles(codeGeneratorRequest *google_protobuf_compiler.CodeGeneratorRequest) ([]*google_protobuf_compiler.CodeGeneratorResponse_File, error) {
-	codeGeneratorResponseFiles := make([]*google_protobuf_compiler.CodeGeneratorResponse_File, len(codeGeneratorRequest.FileToGenerate))
-	for i, fileToGenerate := range codeGeneratorRequest.FileToGenerate {
+	var codeGeneratorResponseFiles []*google_protobuf_compiler.CodeGeneratorResponse_File
+	for _, fileToGenerate := range codeGeneratorRequest.FileToGenerate {
 		fileDescriptorProto, err := p.getProtoFile(fileToGenerate, codeGeneratorRequest.ProtoFile)
 		if err != nil {
 			return nil, err
@@ -88,7 +88,9 @@ func (p *plugin) getCodeGeneratorResponseFiles(codeGeneratorRequest *google_prot
 		if err != nil {
 			return nil, err
 		}
-		codeGeneratorResponseFiles[i] = codeGeneratorResponseFile
+		if codeGeneratorResponseFile != nil {
+			codeGeneratorResponseFiles = append(codeGeneratorResponseFiles, codeGeneratorResponseFile)
+		}
 	}
 	return codeGeneratorResponseFiles, nil
 }
@@ -106,6 +108,9 @@ func (p *plugin) generate(fileDescriptorProto *descriptor.FileDescriptorProto) (
 	reader, err := p.generator.Generate(fileDescriptorProto)
 	if err != nil {
 		return nil, err
+	}
+	if reader == nil {
+		return nil, nil
 	}
 	data, err := ioutil.ReadAll(reader)
 	if err != nil {
@@ -129,7 +134,10 @@ func (p *plugin) getOutFileName(fileDescriptorProto *descriptor.FileDescriptorPr
 }
 
 func (p *plugin) writeCodeGeneratorResponseFiles(codeGeneratorResponseFiles []*google_protobuf_compiler.CodeGeneratorResponse_File) error {
-	return p.writeCodeGeneratorResponse(&google_protobuf_compiler.CodeGeneratorResponse{File: codeGeneratorResponseFiles})
+	if len(codeGeneratorResponseFiles) > 0 {
+		return p.writeCodeGeneratorResponse(&google_protobuf_compiler.CodeGeneratorResponse{File: codeGeneratorResponseFiles})
+	}
+	return nil
 }
 
 func (p *plugin) writeError(err error) error {

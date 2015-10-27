@@ -8,6 +8,7 @@ import (
 
 // Generator generates a file from a *descriptor.FileDescriptorProto.
 type Generator interface {
+	// if the returned io.Reader is nil, this means to not generate any file
 	Generate(fileDescriptorProto *descriptor.FileDescriptorProto) (io.Reader, error)
 }
 
