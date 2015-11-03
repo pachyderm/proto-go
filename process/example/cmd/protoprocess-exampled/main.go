@@ -12,18 +12,12 @@ import (
 	"google.golang.org/grpc"
 )
 
-var (
-	defaultEnv = map[string]string{
-		"PORT": "1678",
-	}
-)
-
 type appEnv struct {
-	Port uint16 `env:"PORT"`
+	Port uint16 `env:"PORT,default=1678"`
 }
 
 func main() {
-	env.Main(do, &appEnv{}, defaultEnv)
+	env.Main(do, &appEnv{})
 }
 
 func do(appEnvObj interface{}) error {

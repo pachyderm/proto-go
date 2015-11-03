@@ -10,18 +10,12 @@ import (
 	"google.golang.org/grpc"
 )
 
-var (
-	defaultEnv = map[string]string{
-		"ADDRESS": "0.0.0.0:1678",
-	}
-)
-
 type appEnv struct {
-	Address string `env:"ADDRESS"`
+	Address string `env:"ADDRESS,default=0.0.0.0:1678"`
 }
 
 func main() {
-	env.Main(do, &appEnv{}, defaultEnv)
+	env.Main(do, &appEnv{})
 }
 
 func do(appEnvObj interface{}) error {
