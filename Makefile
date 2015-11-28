@@ -43,8 +43,10 @@ clean:
 	go clean -i ./...
 
 proto:
-	go get -v go.pedge.io/tools/protoc-all
-	STRIP_PACKAGE_COMMENTS=1 protoc-all go.pedge.io/proto
+	go get -v go.pedge.io/protoeasy/cmd/protoeasy
+	go get -v go.pedge.io/pkg/cmd/strip-package-comments
+	protoeasy --go --grpc --grpc-gateway --go_import_path go.pedge.io/protolog .
+	find . -name *\.pb\*\.go | xargs strip-package-comments
 
 .PHONY: \
 	all \
