@@ -1,16 +1,15 @@
 package protohttp // import "go.pedge.io/proto/http"
 
 import (
-	"bytes"
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
 	"google.golang.org/grpc/metadata"
 
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
 	"golang.org/x/net/context/ctxhttp"
@@ -19,6 +18,8 @@ import (
 var (
 	// ErrInvalidAuthorization says that authorization was present on a context.Context, but was invalid.
 	ErrInvalidAuthorization = errors.New("pkghttp: invalid authorization on context")
+
+	jsonMarshaler = &jsonpb.Marshaler{}
 )
 
 // Do does the given method and url over http, using the given context and request.
@@ -34,11 +35,11 @@ func Do(
 	request proto.Message,
 	response proto.Message,
 ) (retErr error) {
-	data, err := proto.Marshal(request)
+	data, err := jsonMarshaler.MarshalToString(request)
 	if err != nil {
 		return err
 	}
-	httpRequest, err := http.NewRequest(method, url, bytes.NewReader(data))
+	httpRequest, err := http.NewRequest(method, url, strings.NewReader(data))
 	if err != nil {
 		return err
 	}
@@ -61,11 +62,7 @@ func Do(
 			retErr = err
 		}
 	}()
-	data, err = ioutil.ReadAll(httpResponse.Body)
-	if err != nil {
-		return err
-	}
-	return proto.Unmarshal(data, response)
+	return jsonpb.Unmarshal(httpResponse.Body, response)
 }
 
 // GetRequestMetadata gets the request metadata for gRPC.
