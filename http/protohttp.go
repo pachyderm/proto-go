@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -54,15 +55,25 @@ func Do(
 	if err != nil {
 		return err
 	}
-	if httpResponse.Body == nil {
-		return nil
-	}
 	defer func() {
-		if err := httpResponse.Body.Close(); err != nil && retErr == nil {
-			retErr = err
+		if httpResponse.Body != nil {
+			if err := httpResponse.Body.Close(); err != nil && retErr == nil {
+				retErr = err
+			}
 		}
 	}()
-	return jsonpb.Unmarshal(httpResponse.Body, response)
+	body := ""
+	if httpResponse.Body != nil {
+		bodyBytes, err := ioutil.ReadAll(httpResponse.Body)
+		if err != nil {
+			return err
+		}
+		body = string(bodyBytes)
+	}
+	if httpResponse.StatusCode != http.StatusOK {
+		return errors.New(body)
+	}
+	return jsonpb.UnmarshalString(body, response)
 }
 
 // GetRequestMetadata gets the request metadata for gRPC.
@@ -96,9 +107,12 @@ func BasicAuthFromContext(ctx context.Context) (*BasicAuth, error) {
 	if !ok {
 		return nil, nil
 	}
-	authorization, ok := md["authorization"]
+	authorization, ok := md["Authorization"]
 	if !ok {
-		return nil, nil
+		authorization, ok = md["authorization"]
+		if !ok {
+			return nil, nil
+		}
 	}
 	if len(authorization) != 1 {
 		return nil, ErrInvalidAuthorization
