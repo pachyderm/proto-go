@@ -1,0 +1,8 @@
+syntax = "proto3";
+
+package protohttp;
+
+message BasicAuth {
+  string username = 1;
+  string password = 2;
+}
