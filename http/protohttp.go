@@ -28,6 +28,8 @@ var (
 // The http request body is the serialized request.
 // The response will be the deserialized http response body.
 // If basic auth is present, it will be added.
+//
+// Returns the http response body.
 func Do(
 	ctx context.Context,
 	httpClient *http.Client,
@@ -35,25 +37,25 @@ func Do(
 	url string,
 	request proto.Message,
 	response proto.Message,
-) (retErr error) {
+) (retVal []byte, retErr error) {
 	data, err := jsonMarshaler.MarshalToString(request)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	httpRequest, err := http.NewRequest(method, url, strings.NewReader(data))
 	if err != nil {
-		return err
+		return nil, err
 	}
 	basicAuth, err := BasicAuthFromContext(ctx)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if basicAuth != nil {
 		httpRequest.SetBasicAuth(basicAuth.Username, basicAuth.Password)
 	}
 	httpResponse, err := ctxhttp.Do(ctx, httpClient, httpRequest)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	defer func() {
 		if httpResponse.Body != nil {
@@ -62,18 +64,17 @@ func Do(
 			}
 		}
 	}()
-	body := ""
+	var body []byte
 	if httpResponse.Body != nil {
-		bodyBytes, err := ioutil.ReadAll(httpResponse.Body)
+		body, err = ioutil.ReadAll(httpResponse.Body)
 		if err != nil {
-			return err
+			return body, err
 		}
-		body = string(bodyBytes)
 	}
 	if httpResponse.StatusCode != http.StatusOK {
-		return errors.New(body)
+		return body, errors.New(httpResponse.Status)
 	}
-	return jsonpb.UnmarshalString(body, response)
+	return body, jsonpb.UnmarshalString(string(body), response)
 }
 
 // GetRequestMetadata gets the request metadata for gRPC.
