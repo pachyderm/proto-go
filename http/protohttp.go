@@ -4,78 +4,17 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"strings"
 
 	"google.golang.org/grpc/metadata"
 
-	"github.com/golang/protobuf/jsonpb"
-	"github.com/golang/protobuf/proto"
 	"golang.org/x/net/context"
-	"golang.org/x/net/context/ctxhttp"
 )
 
 var (
 	// ErrInvalidAuthorization says that authorization was present on a context.Context, but was invalid.
 	ErrInvalidAuthorization = errors.New("pkghttp: invalid authorization on context")
-
-	jsonMarshaler = &jsonpb.Marshaler{}
 )
-
-// Do does the given method and url over http, using the given context and request.
-//
-// The http request body is the serialized request.
-// The response will be the deserialized http response body.
-// If basic auth is present, it will be added.
-//
-// Returns the http response body.
-func Do(
-	ctx context.Context,
-	httpClient *http.Client,
-	method string,
-	url string,
-	request proto.Message,
-	response proto.Message,
-) (retVal []byte, retErr error) {
-	data, err := jsonMarshaler.MarshalToString(request)
-	if err != nil {
-		return nil, err
-	}
-	httpRequest, err := http.NewRequest(method, url, strings.NewReader(data))
-	if err != nil {
-		return nil, err
-	}
-	basicAuth, err := BasicAuthFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
-	if basicAuth != nil {
-		httpRequest.SetBasicAuth(basicAuth.Username, basicAuth.Password)
-	}
-	httpResponse, err := ctxhttp.Do(ctx, httpClient, httpRequest)
-	if err != nil {
-		return nil, err
-	}
-	defer func() {
-		if httpResponse.Body != nil {
-			if err := httpResponse.Body.Close(); err != nil && retErr == nil {
-				retErr = err
-			}
-		}
-	}()
-	var body []byte
-	if httpResponse.Body != nil {
-		body, err = ioutil.ReadAll(httpResponse.Body)
-		if err != nil {
-			return body, err
-		}
-	}
-	if httpResponse.StatusCode != http.StatusOK {
-		return body, errors.New(httpResponse.Status)
-	}
-	return body, jsonpb.UnmarshalString(string(body), response)
-}
 
 // GetRequestMetadata gets the request metadata for gRPC.
 func (c *BasicAuth) GetRequestMetadata(ctx context.Context, uris ...string) (map[string]string, error) {
