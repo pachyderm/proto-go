@@ -80,7 +80,7 @@ func Serve(
 	s := grpc.NewServer(grpc.MaxConcurrentStreams(math.MaxUint32))
 	registerFunc(s)
 	if opts.Version != nil {
-		protoversion.RegisterAPIServer(s, protoversion.NewAPIServer(opts.Version))
+		protoversion.RegisterAPIServer(s, protoversion.NewAPIServer(opts.Version, protoversion.APIServerOptions{}))
 	}
 	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
 	if err != nil {
