@@ -1,8 +1,8 @@
 dependencies:
   override:
-    - mkdir -p "${GOPATH}/src/go.pedge.io/proto"
-    - rsync -azC --delete ./ "${GOPATH}/src/go.pedge.io/proto/"
-    - make -C "${GOPATH}/src/go.pedge.io/proto" testdeps
+    - mkdir -p "$(echo $GOPATH | cut -f 1 -d :)/src/go.pedge.io/proto"
+    - rsync -azC --delete ./ "$(echo $GOPATH | cut -f 1 -d :)/src/go.pedge.io/proto/"
+    - make -C "$(echo $GOPATH | cut -f 1 -d :)/src/go.pedge.io/proto" updatetestdeps
 test:
   override:
-    - make -C "${GOPATH}/src/go.pedge.io/proto" test
+    - make -C "$(echo $GOPATH | cut -f 1 -d :)/src/go.pedge.io/proto" test
