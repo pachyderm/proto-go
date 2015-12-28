@@ -22,7 +22,7 @@ func main() {
 
 func do(appEnvObj interface{}) error {
 	appEnv := appEnvObj.(*appEnv)
-	protolog.SetLevel(protolog.Level_LEVEL_DEBUG)
+	protolog.SetLevel(protolog.LevelDebug)
 	return protoserver.Serve(
 		appEnv.Port,
 		func(s *grpc.Server) {

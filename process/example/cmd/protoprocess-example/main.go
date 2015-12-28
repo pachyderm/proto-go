@@ -20,7 +20,7 @@ func main() {
 
 func do(appEnvObj interface{}) error {
 	appEnv := appEnvObj.(*appEnv)
-	protolog.SetLevel(protolog.Level_LEVEL_DEBUG)
+	protolog.SetLevel(protolog.LevelDebug)
 	var dirPath string
 	var err error
 	if len(os.Args) >= 2 {
