@@ -42,7 +42,6 @@ type ServeOptions struct {
 	ServeMuxOptions       []runtime.ServeMuxOption
 	HTTPBeforeShutdown    func()
 	HTTPShutdownInitiated func()
-	HTTPStart             chan struct{}
 }
 
 // Serve serves stuff.
@@ -156,9 +155,6 @@ func Serve(
 				}
 			},
 			Server: httpServer,
-		}
-		if opts.HTTPStart != nil {
-			close(opts.HTTPStart)
 		}
 		errCCount++
 		go func() {
