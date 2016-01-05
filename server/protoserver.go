@@ -8,8 +8,8 @@ import (
 	"net/http"
 	"time"
 
-	"gopkg.in/tylerb/graceful.v1"
-
+	"go.pedge.io/env"
+	"go.pedge.io/pkg/http"
 	"go.pedge.io/proto/time"
 	"go.pedge.io/proto/version"
 	"go.pedge.io/protolog"
@@ -22,100 +22,149 @@ import (
 )
 
 var (
-	// ErrMustSpecifyPort is the error if no port is specified to Serve.
-	ErrMustSpecifyPort = errors.New("must specify port")
-	// ErrMustSpecifyRegisterFunc is the error if no registerFunc is specifed to Serve.
+	// ErrMustSpecifyRegisterFunc is used when a register func is nil.
 	ErrMustSpecifyRegisterFunc = errors.New("must specify registerFunc")
 )
 
+// ServeEnv are environment variables for serving.
+type ServeEnv struct {
+	// Default is 7070.
+	GRPCPort uint16 `env:"GRPC_PORT,default=7070"`
+}
+
+// GetServeEnv gets a ServeEnv using environment variables.
+func GetServeEnv() (ServeEnv, error) {
+	var serveEnv ServeEnv
+	if err := env.Populate(&serveEnv); err != nil {
+		return ServeEnv{}, err
+	}
+	return serveEnv, nil
+}
+
 // ServeOptions represent optional fields for serving.
 type ServeOptions struct {
-	HTTPPort         uint16
-	HTTPRegisterFunc func(context.Context, *runtime.ServeMux, *grpc.ClientConn) error
-	Version          *protoversion.Version
+	Version *protoversion.Version
 }
 
 // Serve serves stuff.
 func Serve(
-	port uint16,
+	appName string,
 	registerFunc func(*grpc.Server),
-	opts ServeOptions,
+	serveEnv ServeEnv,
+	options ServeOptions,
 ) (retErr error) {
-	if port == 0 {
-		return ErrMustSpecifyPort
-	}
+	defer func(start time.Time) { logServerFinished(start, retErr) }(time.Now())
 	if registerFunc == nil {
 		return ErrMustSpecifyRegisterFunc
 	}
-	defer func(start time.Time) { logServerFinished(start, retErr) }(time.Now())
-	s := grpc.NewServer(grpc.MaxConcurrentStreams(math.MaxUint32))
-	registerFunc(s)
-	if opts.Version != nil {
-		protoversion.RegisterAPIServer(s, protoversion.NewAPIServer(opts.Version, protoversion.APIServerOptions{}))
+	if serveEnv.GRPCPort == 0 {
+		serveEnv.GRPCPort = 7070
 	}
-	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", port))
+	appEnv, err := pkghttp.GetAppEnv()
+	if err != nil {
+		return err
+	}
+	if _, err := pkghttp.SetupAppEnv(appName, appEnv); err != nil {
+		return err
+	}
+	grpcServer := grpc.NewServer(grpc.MaxConcurrentStreams(math.MaxUint32))
+	registerFunc(grpcServer)
+	if options.Version != nil {
+		protoversion.RegisterAPIServer(grpcServer, protoversion.NewAPIServer(options.Version, protoversion.APIServerOptions{}))
+	}
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", serveEnv.GRPCPort))
+	if err != nil {
+		return err
+	}
+	return grpcServer.Serve(listener)
+}
+
+// ServeWithHTTPOptions represent optional fields for serving.
+type ServeWithHTTPOptions struct {
+	ServeOptions
+	HTTPHandlerModifier func(http.Handler) (http.Handler, error)
+}
+
+// ServeWithHTTP serves stuff.
+func ServeWithHTTP(
+	appName string,
+	registerFunc func(*grpc.Server),
+	httpRegisterFunc func(context.Context, *runtime.ServeMux, *grpc.ClientConn) error,
+	serveEnv ServeEnv,
+	handlerEnv pkghttp.HandlerEnv,
+	options ServeWithHTTPOptions,
+) (retErr error) {
+	defer func(start time.Time) { logServerFinished(start, retErr) }(time.Now())
+	if registerFunc == nil || httpRegisterFunc == nil {
+		return ErrMustSpecifyRegisterFunc
+	}
+	if serveEnv.GRPCPort == 0 {
+		serveEnv.GRPCPort = 7070
+	}
+	if handlerEnv.Port == 0 {
+		handlerEnv.Port = 8080
+	}
+	appEnv, err := pkghttp.GetAppEnv()
+	if err != nil {
+		return err
+	}
+	if _, err := pkghttp.SetupAppEnv(appName, appEnv); err != nil {
+		return err
+	}
+
+	grpcServer := grpc.NewServer(grpc.MaxConcurrentStreams(math.MaxUint32))
+	registerFunc(grpcServer)
+	if options.Version != nil {
+		protoversion.RegisterAPIServer(grpcServer, protoversion.NewAPIServer(options.Version, protoversion.APIServerOptions{}))
+	}
+	listener, err := net.Listen("tcp", fmt.Sprintf(":%d", serveEnv.GRPCPort))
 	if err != nil {
 		return err
 	}
 	grpcErrC := make(chan error)
-	httpErrC := make(chan error)
-	errCCount := 1
-	go func() { grpcErrC <- s.Serve(listener) }()
-	if opts.HTTPPort != 0 && (opts.Version != nil || opts.HTTPRegisterFunc != nil) {
-		time.Sleep(1 * time.Second)
-		ctx, cancel := context.WithCancel(context.Background())
-		mux := runtime.NewServeMux()
-		conn, err := grpc.Dial(fmt.Sprintf("0.0.0.0:%d", port), grpc.WithInsecure())
-		if err != nil {
-			glog.Flush()
+	go func() { grpcErrC <- grpcServer.Serve(listener) }()
+
+	time.Sleep(1 * time.Second)
+	ctx, cancel := context.WithCancel(context.Background())
+	conn, err := grpc.Dial(fmt.Sprintf("0.0.0.0:%d", serveEnv.GRPCPort), grpc.WithInsecure())
+	if err != nil {
+		cancel()
+		return err
+	}
+	go func() {
+		<-ctx.Done()
+		_ = conn.Close()
+	}()
+	mux := runtime.NewServeMux()
+	if options.Version != nil {
+		if err := protoversion.RegisterAPIHandler(ctx, mux, conn); err != nil {
 			cancel()
 			return err
 		}
-		go func() {
-			<-ctx.Done()
-			_ = conn.Close()
-		}()
-		if opts.Version != nil {
-			if err := protoversion.RegisterAPIHandler(ctx, mux, conn); err != nil {
-				_ = conn.Close()
-				glog.Flush()
-				cancel()
-				return err
-			}
-		}
-		if opts.HTTPRegisterFunc != nil {
-			if err := opts.HTTPRegisterFunc(ctx, mux, conn); err != nil {
-				_ = conn.Close()
-				glog.Flush()
-				cancel()
-				return err
-			}
-		}
-		httpAddress := fmt.Sprintf(":%d", opts.HTTPPort)
-		httpServer := &http.Server{
-			Addr:    httpAddress,
-			Handler: mux,
-		}
-		gracefulServer := &graceful.Server{
-			Timeout: 1 * time.Second,
-			ShutdownInitiated: func() {
-				glog.Flush()
-				cancel()
-			},
-			Server: httpServer,
-		}
-		errCCount++
-		go func() { httpErrC <- gracefulServer.ListenAndServe() }()
 	}
+	if err := httpRegisterFunc(ctx, mux, conn); err != nil {
+		cancel()
+		return err
+	}
+	var handler http.Handler = mux
+	if options.HTTPHandlerModifier != nil {
+		handler, err = options.HTTPHandlerModifier(mux)
+		if err != nil {
+			cancel()
+			return err
+		}
+	}
+	httpErrC := make(chan error)
+	go func() { httpErrC <- pkghttp.ListenAndServeHandler(handler, handlerEnv) }()
 	protolog.Info(
 		&ServerStarted{
-			Port:     uint32(port),
-			HttpPort: uint32(opts.HTTPPort),
+			Port:     uint32(serveEnv.GRPCPort),
+			HttpPort: uint32(handlerEnv.Port),
 		},
 	)
 	var errs []error
 	grpcStopped := false
-	for i := 0; i < errCCount; i++ {
+	for i := 0; i < 2; i++ {
 		select {
 		case grpcErr := <-grpcErrC:
 			if grpcErr != nil {
@@ -127,7 +176,7 @@ func Serve(
 				errs = append(errs, fmt.Errorf("http error: %s", httpErr.Error()))
 			}
 			if !grpcStopped {
-				s.Stop()
+				grpcServer.Stop()
 				_ = listener.Close()
 				grpcStopped = true
 			}
@@ -154,4 +203,5 @@ func logServerFinished(start time.Time, err error) {
 			},
 		)
 	}
+	glog.Flush()
 }

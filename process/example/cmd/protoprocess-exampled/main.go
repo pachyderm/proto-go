@@ -17,14 +17,14 @@ type appEnv struct {
 }
 
 func main() {
-	env.Main(do, &appEnv{})
+	env.Main(do, &protoserver.ServeEnv{})
 }
 
 func do(appEnvObj interface{}) error {
-	appEnv := appEnvObj.(*appEnv)
+	serveEnv := appEnvObj.(*protoserver.ServeEnv)
 	protolog.SetLevel(protolog.LevelDebug)
 	return protoserver.Serve(
-		appEnv.Port,
+		"exampled",
 		func(s *grpc.Server) {
 			protoprocess.RegisterAPIServer(
 				s,
@@ -43,6 +43,7 @@ func do(appEnvObj interface{}) error {
 				),
 			)
 		},
+		*serveEnv,
 		protoserver.ServeOptions{},
 	)
 }
