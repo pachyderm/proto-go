@@ -1,10 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 
-	"go.pedge.io/env"
 	"go.pedge.io/pkg/archive"
 	"go.pedge.io/proto/process"
 	"go.pedge.io/proto/server"
@@ -12,19 +12,17 @@ import (
 	"google.golang.org/grpc"
 )
 
-type appEnv struct {
-	Port uint16 `env:"PORT,default=1678"`
-}
-
 func main() {
-	env.Main(do, &protoserver.ServeEnv{})
+	if err := do(); err != nil {
+		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		os.Exit(1)
+	}
+	os.Exit(0)
 }
 
-func do(appEnvObj interface{}) error {
-	serveEnv := appEnvObj.(*protoserver.ServeEnv)
+func do() error {
 	protolog.SetLevel(protolog.LevelDebug)
-	return protoserver.Serve(
-		"exampled",
+	return protoserver.GetAndServe(
 		func(s *grpc.Server) {
 			protoprocess.RegisterAPIServer(
 				s,
@@ -43,7 +41,6 @@ func do(appEnvObj interface{}) error {
 				),
 			)
 		},
-		*serveEnv,
 		protoserver.ServeOptions{},
 	)
 }
