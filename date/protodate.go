@@ -97,8 +97,8 @@ type FakeDater interface {
 }
 
 // NewFakeDater returns a new FakeDater with the initial date.
-func NewFakeDater(initialDate *google_type.Date) Dater {
-	return newFakeDater(initialDate)
+func NewFakeDater(month int32, day int32, year int32) Dater {
+	return newFakeDater(month, day, year)
 }
 
 type systemDater struct{}
@@ -112,8 +112,8 @@ type fakeDater struct {
 	lock    *sync.RWMutex
 }
 
-func newFakeDater(initialDate *google_type.Date) Dater {
-	return &fakeDater{copyDate(initialDate), &sync.RWMutex{}}
+func newFakeDater(month int32, day int32, year int32) Dater {
+	return &fakeDater{NewDate(month, day, year), &sync.RWMutex{}}
 }
 
 func (f *fakeDater) Now() *google_type.Date {
