@@ -97,7 +97,7 @@ type FakeDater interface {
 }
 
 // NewFakeDater returns a new FakeDater with the initial date.
-func NewFakeDater(month int32, day int32, year int32) Dater {
+func NewFakeDater(month int32, day int32, year int32) FakeDater {
 	return newFakeDater(month, day, year)
 }
 
@@ -112,7 +112,7 @@ type fakeDater struct {
 	lock    *sync.RWMutex
 }
 
-func newFakeDater(month int32, day int32, year int32) Dater {
+func newFakeDater(month int32, day int32, year int32) *fakeDater {
 	return &fakeDater{NewDate(month, day, year), &sync.RWMutex{}}
 }
 
