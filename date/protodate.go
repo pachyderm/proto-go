@@ -12,6 +12,15 @@ var (
 	SystemDater = &systemDater{}
 )
 
+// NewDate is a convienence function to create a new Date.
+func NewDate(month int32, day int32, year int32) *google_type.Date {
+	return &google_type.Date{
+		Month: month,
+		Day:   day,
+		Year:  year,
+	}
+}
+
 // Now returns the current date at UTC.
 func Now() *google_type.Date {
 	return TimeToDate(time.Now().UTC())
@@ -19,11 +28,7 @@ func Now() *google_type.Date {
 
 // TimeToDate converts a golang Time to a Date.
 func TimeToDate(t time.Time) *google_type.Date {
-	return &google_type.Date{
-		Day:   int32(t.Day()),
-		Month: int32(t.Month()),
-		Year:  int32(t.Year()),
-	}
+	return NewDate(int32(t.Month()), int32(t.Day()), int32(t.Year()))
 }
 
 // DateToTime converts a Date to a golang Time.
@@ -120,11 +125,7 @@ func (f *fakeDater) Now() *google_type.Date {
 func (f *fakeDater) Set(month int32, day int32, year int32) {
 	f.lock.Lock()
 	defer f.lock.Unlock()
-	f.curDate = &google_type.Date{
-		Month: month,
-		Day:   day,
-		Year:  year,
-	}
+	f.curDate = NewDate(month, day, year)
 }
 
 func copyDate(date *google_type.Date) *google_type.Date {
