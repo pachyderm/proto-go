@@ -1,6 +1,7 @@
 package protodate // import "go.pedge.io/proto/date"
 
 import (
+	"sync"
 	"time"
 
 	"go.pedge.io/googleapis/google/type"
@@ -84,8 +85,49 @@ type Dater interface {
 	Now() *google_type.Date
 }
 
+// FakeDater is a Dater for testing.
+type FakeDater interface {
+	Dater
+	Set(month int32, day int32, year int32)
+}
+
+// NewFakeDater returns a new FakeDater with the initial date.
+func NewFakeDater(initialDate *google_type.Date) Dater {
+	return newFakeDater(initialDate)
+}
+
 type systemDater struct{}
 
 func (s *systemDater) Now() *google_type.Date {
 	return Now()
+}
+
+type fakeDater struct {
+	curDate *google_type.Date
+	lock    *sync.RWMutex
+}
+
+func newFakeDater(initialDate *google_type.Date) Dater {
+	return &fakeDater{copyDate(initialDate), &sync.RWMutex{}}
+}
+
+func (f *fakeDater) Now() *google_type.Date {
+	f.lock.RLock()
+	defer f.lock.RUnlock()
+	return copyDate(f.curDate)
+}
+
+func (f *fakeDater) Set(month int32, day int32, year int32) {
+	f.lock.Lock()
+	defer f.lock.Unlock()
+	f.curDate = &google_type.Date{
+		Month: month,
+		Day:   day,
+		Year:  year,
+	}
+}
+
+func copyDate(date *google_type.Date) *google_type.Date {
+	c := *date
+	return &c
 }
