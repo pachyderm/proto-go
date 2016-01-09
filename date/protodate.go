@@ -33,6 +33,52 @@ func DateToTime(d *google_type.Date) time.Time {
 	return time.Date(int(d.Year), time.Month(d.Month), int(d.Day), 0, 0, 0, 0, time.UTC)
 }
 
+// DateLess returns true if i is before j.
+func DateLess(i *google_type.Date, j *google_type.Date) bool {
+	if j == nil {
+		return false
+	}
+	if i == nil {
+		return true
+	}
+	if i.Year < j.Year {
+		return true
+	}
+	if i.Year > j.Year {
+		return false
+	}
+	if i.Month < j.Month {
+		return true
+	}
+	if i.Month > j.Month {
+		return false
+	}
+	return i.Day < j.Day
+}
+
+// DateInRange returns whether d is within start to end, inclusive.
+// The given date is expected to not be nil.
+// If start is nil, it checks whether d is less than or equal to end.
+// If end is nil it checks whether d is greater than or equal to end.
+// If start and end are nil, it returns true.
+func DateInRange(d *google_type.Date, start *google_type.Date, end *google_type.Date) bool {
+	if start == nil && end == nil {
+		return true
+	}
+	if start == nil {
+		return DateLess(d, end) || DateEqual(d, end)
+	}
+	if end == nil {
+		return DateLess(start, d) || DateEqual(start, d)
+	}
+	return DateEqual(d, start) || DateEqual(d, end) || (DateLess(start, d) && DateLess(d, end))
+}
+
+// DateEqual returns true if i equals j.
+func DateEqual(i *google_type.Date, j *google_type.Date) bool {
+	return ((i == nil) == (j == nil)) && ((i == nil) || (*i == *j))
+}
+
 // Dater provides the current date.
 type Dater interface {
 	Now() *google_type.Date
