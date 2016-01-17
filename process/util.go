@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"io"
 
-	"go.pedge.io/google-protobuf"
+	"go.pedge.io/pb/go/google/protobuf"
 	"go.pedge.io/proto/stream"
 	"go.pedge.io/protolog"
 )

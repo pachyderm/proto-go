@@ -13,7 +13,7 @@ import (
 	"github.com/gengo/grpc-gateway/utilities"
 	"github.com/golang/glog"
 	"github.com/golang/protobuf/proto"
-	"go.pedge.io/google-protobuf"
+	"go.pedge.io/pb/go/google/protobuf"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"

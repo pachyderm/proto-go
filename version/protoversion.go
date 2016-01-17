@@ -3,7 +3,7 @@ package protoversion // import "go.pedge.io/proto/version"
 import (
 	"fmt"
 
-	"go.pedge.io/google-protobuf"
+	"go.pedge.io/pb/go/google/protobuf"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 )

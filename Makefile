@@ -34,7 +34,8 @@ errcheck: testdeps
 	go get -v github.com/kisielk/errcheck
 	errcheck ./...
 
-pretest: lint errcheck
+#errcheck
+pretest: lint
 
 test: testdeps pretest
 	go test -test.v ./...

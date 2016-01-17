@@ -7,7 +7,7 @@ package protoprocess
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import google_protobuf "go.pedge.io/google-protobuf"
+import google_protobuf "go.pedge.io/pb/go/google/protobuf"
 
 import (
 	context "golang.org/x/net/context"

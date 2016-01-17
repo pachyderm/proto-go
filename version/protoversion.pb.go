@@ -8,7 +8,7 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 import _ "github.com/gengo/grpc-gateway/third_party/googleapis/google/api"
-import google_protobuf1 "go.pedge.io/google-protobuf"
+import google_protobuf1 "go.pedge.io/pb/go/google/protobuf"
 
 import (
 	context "golang.org/x/net/context"
