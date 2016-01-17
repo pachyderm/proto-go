@@ -14,6 +14,10 @@ var _ = proto.Marshal
 var _ = fmt.Errorf
 var _ = math.Inf
 
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the proto package it is being compiled against.
+const _ = proto.ProtoPackageIsVersion1
+
 type ServerStarted struct {
 	Port     uint32 `protobuf:"varint,1,opt,name=port" json:"port,omitempty"`
 	HttpPort uint32 `protobuf:"varint,2,opt,name=http_port" json:"http_port,omitempty"`
