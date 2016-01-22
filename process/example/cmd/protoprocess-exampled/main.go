@@ -8,7 +8,6 @@ import (
 	"go.pedge.io/pkg/archive"
 	"go.pedge.io/proto/process"
 	"go.pedge.io/proto/server"
-	"go.pedge.io/protolog"
 	"google.golang.org/grpc"
 )
 
@@ -21,7 +20,6 @@ func main() {
 }
 
 func do() error {
-	protolog.SetLevel(protolog.LevelDebug)
 	return protoserver.GetAndServe(
 		func(s *grpc.Server) {
 			protoprocess.RegisterAPIServer(
@@ -52,7 +50,6 @@ func newProcessor() *processor {
 }
 
 func (p *processor) Process(dirPath string) error {
-	protolog.Debugf("processing in %s", dirPath)
 	return filepath.Walk(
 		dirPath,
 		func(path string, info os.FileInfo, err error) (retErr error) {
@@ -62,7 +59,6 @@ func (p *processor) Process(dirPath string) error {
 			if info.IsDir() {
 				return nil
 			}
-			protolog.Debugf("processing %s", path)
 			file, err := os.OpenFile(path, os.O_APPEND|os.O_WRONLY, info.Mode()&os.ModePerm)
 			if err != nil {
 				return err

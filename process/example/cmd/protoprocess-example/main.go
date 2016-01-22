@@ -6,7 +6,6 @@ import (
 	"go.pedge.io/env"
 	"go.pedge.io/pkg/archive"
 	"go.pedge.io/proto/process"
-	"go.pedge.io/protolog"
 	"google.golang.org/grpc"
 )
 
@@ -20,7 +19,6 @@ func main() {
 
 func do(appEnvObj interface{}) error {
 	appEnv := appEnvObj.(*appEnv)
-	protolog.SetLevel(protolog.LevelDebug)
 	var dirPath string
 	var err error
 	if len(os.Args) >= 2 {

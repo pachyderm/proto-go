@@ -6,7 +6,6 @@ import (
 
 	"go.pedge.io/pb/go/google/protobuf"
 	"go.pedge.io/proto/stream"
-	"go.pedge.io/protolog"
 )
 
 func send(reader io.Reader, streamingBytesServer protostream.StreamingBytesServer, chunkSizeBytes int) error {
@@ -27,7 +26,6 @@ func send(reader io.Reader, streamingBytesServer protostream.StreamingBytesServe
 			return err
 		}
 		count += n
-		protolog.Debugf("sent %d bytes", count)
 		p = make([]byte, chunkSizeBytes)
 	}
 	return nil
@@ -41,7 +39,6 @@ func recv(writer io.Writer, streamingBytesClient protostream.StreamingBytesClien
 		}
 		if bytesValue != nil && bytesValue.Value != nil && len(bytesValue.Value) > 0 {
 			count += len(bytesValue.Value)
-			protolog.Debugf("read %d bytes", count)
 			n, err := writer.Write(bytesValue.Value)
 			if err != nil {
 				return err

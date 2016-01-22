@@ -9,10 +9,10 @@ import (
 	"time"
 
 	"go.pedge.io/env"
+	"go.pedge.io/lion/proto"
+	"go.pedge.io/pb/go/google/protobuf"
 	"go.pedge.io/pkg/http"
-	"go.pedge.io/proto/time"
 	"go.pedge.io/proto/version"
-	"go.pedge.io/protolog"
 
 	"golang.org/x/net/context"
 
@@ -179,7 +179,7 @@ func ServeWithHTTP(
 	}
 	httpErrC := make(chan error)
 	go func() { httpErrC <- pkghttp.ListenAndServe(handler, handlerEnv) }()
-	protolog.Info(
+	protolion.Info(
 		&ServerStarted{
 			Port:     uint32(serveEnv.GRPCPort),
 			HttpPort: uint32(handlerEnv.Port),
@@ -213,16 +213,16 @@ func ServeWithHTTP(
 
 func logServerFinished(start time.Time, err error) {
 	if err != nil {
-		protolog.Error(
+		protolion.Error(
 			&ServerFinished{
 				Error:    err.Error(),
-				Duration: prototime.DurationToProto(time.Since(start)),
+				Duration: google_protobuf.DurationToProto(time.Since(start)),
 			},
 		)
 	} else {
-		protolog.Info(
+		protolion.Info(
 			&ServerFinished{
-				Duration: prototime.DurationToProto(time.Since(start)),
+				Duration: google_protobuf.DurationToProto(time.Since(start)),
 			},
 		)
 	}
