@@ -1,5 +1,7 @@
 package protohttp // import "go.pedge.io/proto/http"
 
+// do not actually use this package, this was really just for testing
+
 import (
 	"encoding/base64"
 	"errors"

@@ -1,5 +1,7 @@
 package prototest // import "go.pedge.io/proto/test"
 
+// this is not an amazing package, would not use
+
 import (
 	"fmt"
 	"math"

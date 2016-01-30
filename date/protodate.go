@@ -1,10 +1,12 @@
 package protodate // import "go.pedge.io/proto/date"
 
+// the functionality in here is moving directly to go.pedge.io/pb
+
 import (
 	"sync"
 	"time"
 
-	"go.pedge.io/googleapis/google/type"
+	"go.pedge.io/pb/go/google/type"
 )
 
 var (
