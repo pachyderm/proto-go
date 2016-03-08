@@ -23,7 +23,7 @@ var _ codes.Code
 var _ io.Reader
 var _ = runtime.String
 var _ = json.Marshal
-var _ = utilities.PascalFromSnake
+var _ = utilities.NewDoubleArray
 
 func request_API_GetVersion_0(ctx context.Context, client APIClient, req *http.Request, pathParams map[string]string) (proto.Message, error) {
 	var protoReq google_protobuf.Empty
@@ -33,8 +33,8 @@ func request_API_GetVersion_0(ctx context.Context, client APIClient, req *http.R
 
 // RegisterAPIHandlerFromEndpoint is same as RegisterAPIHandler but
 // automatically dials to "endpoint" and closes the connection when "ctx" gets done.
-func RegisterAPIHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string) (err error) {
-	conn, err := grpc.Dial(endpoint, grpc.WithInsecure())
+func RegisterAPIHandlerFromEndpoint(ctx context.Context, mux *runtime.ServeMux, endpoint string, opts []grpc.DialOption) (err error) {
+	conn, err := grpc.Dial(endpoint, opts...)
 	if err != nil {
 		return err
 	}
@@ -62,6 +62,14 @@ func RegisterAPIHandler(ctx context.Context, mux *runtime.ServeMux, conn *grpc.C
 	client := NewAPIClient(conn)
 
 	mux.Handle("GET", pattern_API_GetVersion_0, func(w http.ResponseWriter, req *http.Request, pathParams map[string]string) {
+		ctx, cancel := context.WithCancel(ctx)
+		closeNotifier, ok := w.(http.CloseNotifier)
+		if ok {
+			go func() {
+				<-closeNotifier.CloseNotify()
+				cancel()
+			}()
+		}
 		resp, err := request_API_GetVersion_0(runtime.AnnotateContext(ctx, req), client, req, pathParams)
 		if err != nil {
 			runtime.HTTPError(ctx, w, req, err)
