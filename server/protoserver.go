@@ -84,7 +84,14 @@ func Serve(
 	if err != nil {
 		return err
 	}
-	return grpcServer.Serve(listener)
+	errC := make(chan error)
+	go func() { errC <- grpcServer.Serve(listener) }()
+	protolion.Info(
+		&ServerStarted{
+			Port: uint32(serveEnv.GRPCPort),
+		},
+	)
+	return <-errC
 }
 
 // ServeWithHTTPOptions represent optional fields for serving.
