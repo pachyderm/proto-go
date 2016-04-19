@@ -2,15 +2,6 @@
 // source: version/protoversion.proto
 // DO NOT EDIT!
 
-/*
-Package protoversion is a generated protocol buffer package.
-
-It is generated from these files:
-	version/protoversion.proto
-
-It has these top-level messages:
-	Version
-*/
 package protoversion
 
 import proto "github.com/golang/protobuf/proto"

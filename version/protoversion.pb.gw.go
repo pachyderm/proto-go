@@ -2,11 +2,6 @@
 // source: version/protoversion.proto
 // DO NOT EDIT!
 
-/*
-Package protoversion is a reverse proxy.
-
-It translates gRPC into RESTful JSON APIs.
-*/
 package protoversion
 
 import (

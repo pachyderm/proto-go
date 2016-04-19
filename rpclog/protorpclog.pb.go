@@ -2,15 +2,6 @@
 // source: rpclog/protorpclog.proto
 // DO NOT EDIT!
 
-/*
-Package protorpclog is a generated protocol buffer package.
-
-It is generated from these files:
-	rpclog/protorpclog.proto
-
-It has these top-level messages:
-	Call
-*/
 package protorpclog
 
 import proto "github.com/golang/protobuf/proto"

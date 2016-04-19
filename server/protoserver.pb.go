@@ -2,16 +2,6 @@
 // source: server/protoserver.proto
 // DO NOT EDIT!
 
-/*
-Package protoserver is a generated protocol buffer package.
-
-It is generated from these files:
-	server/protoserver.proto
-
-It has these top-level messages:
-	ServerStarted
-	ServerFinished
-*/
 package protoserver
 
 import proto "github.com/golang/protobuf/proto"

@@ -2,14 +2,6 @@
 // source: process/protoprocess.proto
 // DO NOT EDIT!
 
-/*
-Package protoprocess is a generated protocol buffer package.
-
-It is generated from these files:
-	process/protoprocess.proto
-
-It has these top-level messages:
-*/
 package protoprocess
 
 import proto "github.com/golang/protobuf/proto"

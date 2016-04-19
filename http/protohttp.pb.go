@@ -2,15 +2,6 @@
 // source: http/protohttp.proto
 // DO NOT EDIT!
 
-/*
-Package protohttp is a generated protocol buffer package.
-
-It is generated from these files:
-	http/protohttp.proto
-
-It has these top-level messages:
-	BasicAuth
-*/
 package protohttp
 
 import proto "github.com/golang/protobuf/proto"
