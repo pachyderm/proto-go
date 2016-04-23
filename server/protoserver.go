@@ -12,6 +12,7 @@ import (
 	"go.pedge.io/lion/proto"
 	"go.pedge.io/pb/go/google/protobuf"
 	"go.pedge.io/pkg/http"
+	"go.pedge.io/proto/rpclog"
 	"go.pedge.io/proto/version"
 
 	"golang.org/x/net/context"
@@ -75,7 +76,10 @@ func Serve(
 	if serveEnv.GRPCPort == 0 {
 		serveEnv.GRPCPort = 7070
 	}
-	grpcServer := grpc.NewServer(grpc.MaxConcurrentStreams(math.MaxUint32))
+	grpcServer := grpc.NewServer(
+		grpc.MaxConcurrentStreams(math.MaxUint32),
+		grpc.UnaryInterceptor(protorpclog.LoggingUnaryServerInterceptor),
+	)
 	registerFunc(grpcServer)
 	if options.Version != nil {
 		protoversion.RegisterAPIServer(grpcServer, protoversion.NewAPIServer(options.Version, protoversion.APIServerOptions{}))
@@ -142,7 +146,10 @@ func ServeWithHTTP(
 		handlerEnv.Port = 8080
 	}
 
-	grpcServer := grpc.NewServer(grpc.MaxConcurrentStreams(math.MaxUint32))
+	grpcServer := grpc.NewServer(
+		grpc.MaxConcurrentStreams(math.MaxUint32),
+		grpc.UnaryInterceptor(protorpclog.LoggingUnaryServerInterceptor),
+	)
 	registerFunc(grpcServer)
 	if options.Version != nil {
 		protoversion.RegisterAPIServer(grpcServer, protoversion.NewAPIServer(options.Version, protoversion.APIServerOptions{}))
