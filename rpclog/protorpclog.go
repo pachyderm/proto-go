@@ -31,6 +31,7 @@ var (
 // }
 type Logger interface {
 	Log(request proto.Message, response proto.Message, err error, duration time.Duration)
+	LogMethod(method string, request proto.Message, response proto.Message, err error, duration time.Duration)
 }
 
 // NewLogger returns a new Logger.
@@ -48,6 +49,10 @@ func newLogger(serviceName string) *logger {
 
 func (l *logger) Log(request proto.Message, response proto.Message, err error, duration time.Duration) {
 	Log(l.serviceName, getMethodName(2), request, response, err, duration)
+}
+
+func (l *logger) LogMethod(method string, request proto.Message, response proto.Message, err error, duration time.Duration) {
+	Log(l.serviceName, method, request, response, err, duration)
 }
 
 // Log logs an RPC call at the info level if no error, or at the error level if error.
