@@ -2,6 +2,15 @@
 // source: http/protohttp.proto
 // DO NOT EDIT!
 
+/*
+Package protohttp is a generated protocol buffer package.
+
+It is generated from these files:
+	http/protohttp.proto
+
+It has these top-level messages:
+	BasicAuth
+*/
 package protohttp
 
 import proto "github.com/golang/protobuf/proto"
@@ -28,6 +37,20 @@ func (m *BasicAuth) Reset()                    { *m = BasicAuth{} }
 func (m *BasicAuth) String() string            { return proto.CompactTextString(m) }
 func (*BasicAuth) ProtoMessage()               {}
 func (*BasicAuth) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+
+func (m *BasicAuth) GetUsername() string {
+	if m != nil {
+		return m.Username
+	}
+	return ""
+}
+
+func (m *BasicAuth) GetPassword() string {
+	if m != nil {
+		return m.Password
+	}
+	return ""
+}
 
 func init() {
 	proto.RegisterType((*BasicAuth)(nil), "protohttp.BasicAuth")

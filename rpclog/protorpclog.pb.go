@@ -2,6 +2,15 @@
 // source: rpclog/protorpclog.proto
 // DO NOT EDIT!
 
+/*
+Package protorpclog is a generated protocol buffer package.
+
+It is generated from these files:
+	rpclog/protorpclog.proto
+
+It has these top-level messages:
+	Call
+*/
 package protorpclog
 
 import proto "github.com/golang/protobuf/proto"
@@ -33,6 +42,41 @@ func (m *Call) Reset()                    { *m = Call{} }
 func (m *Call) String() string            { return proto.CompactTextString(m) }
 func (*Call) ProtoMessage()               {}
 func (*Call) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
+
+func (m *Call) GetService() string {
+	if m != nil {
+		return m.Service
+	}
+	return ""
+}
+
+func (m *Call) GetMethod() string {
+	if m != nil {
+		return m.Method
+	}
+	return ""
+}
+
+func (m *Call) GetRequest() string {
+	if m != nil {
+		return m.Request
+	}
+	return ""
+}
+
+func (m *Call) GetResponse() string {
+	if m != nil {
+		return m.Response
+	}
+	return ""
+}
+
+func (m *Call) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
 
 func (m *Call) GetDuration() *google_protobuf.Duration {
 	if m != nil {

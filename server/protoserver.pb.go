@@ -2,6 +2,16 @@
 // source: server/protoserver.proto
 // DO NOT EDIT!
 
+/*
+Package protoserver is a generated protocol buffer package.
+
+It is generated from these files:
+	server/protoserver.proto
+
+It has these top-level messages:
+	ServerStarted
+	ServerFinished
+*/
 package protoserver
 
 import proto "github.com/golang/protobuf/proto"
@@ -30,6 +40,20 @@ func (m *ServerStarted) String() string            { return proto.CompactTextStr
 func (*ServerStarted) ProtoMessage()               {}
 func (*ServerStarted) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
+func (m *ServerStarted) GetPort() uint32 {
+	if m != nil {
+		return m.Port
+	}
+	return 0
+}
+
+func (m *ServerStarted) GetHttpPort() uint32 {
+	if m != nil {
+		return m.HttpPort
+	}
+	return 0
+}
+
 type ServerFinished struct {
 	Error    string                    `protobuf:"bytes,1,opt,name=error" json:"error,omitempty"`
 	Duration *google_protobuf.Duration `protobuf:"bytes,2,opt,name=duration" json:"duration,omitempty"`
@@ -39,6 +63,13 @@ func (m *ServerFinished) Reset()                    { *m = ServerFinished{} }
 func (m *ServerFinished) String() string            { return proto.CompactTextString(m) }
 func (*ServerFinished) ProtoMessage()               {}
 func (*ServerFinished) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{1} }
+
+func (m *ServerFinished) GetError() string {
+	if m != nil {
+		return m.Error
+	}
+	return ""
+}
 
 func (m *ServerFinished) GetDuration() *google_protobuf.Duration {
 	if m != nil {

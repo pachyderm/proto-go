@@ -2,6 +2,15 @@
 // source: version/protoversion.proto
 // DO NOT EDIT!
 
+/*
+Package protoversion is a generated protocol buffer package.
+
+It is generated from these files:
+	version/protoversion.proto
+
+It has these top-level messages:
+	Version
+*/
 package protoversion
 
 import proto "github.com/golang/protobuf/proto"
@@ -38,6 +47,34 @@ func (m *Version) String() string            { return proto.CompactTextString(m)
 func (*Version) ProtoMessage()               {}
 func (*Version) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{0} }
 
+func (m *Version) GetMajor() uint32 {
+	if m != nil {
+		return m.Major
+	}
+	return 0
+}
+
+func (m *Version) GetMinor() uint32 {
+	if m != nil {
+		return m.Minor
+	}
+	return 0
+}
+
+func (m *Version) GetMicro() uint32 {
+	if m != nil {
+		return m.Micro
+	}
+	return 0
+}
+
+func (m *Version) GetAdditional() string {
+	if m != nil {
+		return m.Additional
+	}
+	return ""
+}
+
 func init() {
 	proto.RegisterType((*Version)(nil), "protoversion.Version")
 }
@@ -48,7 +85,7 @@ var _ grpc.ClientConn
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion3
+const _ = grpc.SupportPackageIsVersion4
 
 // Client API for API service
 
@@ -111,7 +148,7 @@ var _API_serviceDesc = grpc.ServiceDesc{
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
-	Metadata: fileDescriptor0,
+	Metadata: "version/protoversion.proto",
 }
 
 func init() { proto.RegisterFile("version/protoversion.proto", fileDescriptor0) }

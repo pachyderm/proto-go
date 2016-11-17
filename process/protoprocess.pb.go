@@ -2,6 +2,14 @@
 // source: process/protoprocess.proto
 // DO NOT EDIT!
 
+/*
+Package protoprocess is a generated protocol buffer package.
+
+It is generated from these files:
+	process/protoprocess.proto
+
+It has these top-level messages:
+*/
 package protoprocess
 
 import proto "github.com/golang/protobuf/proto"
@@ -31,7 +39,7 @@ var _ grpc.ClientConn
 
 // This is a compile-time assertion to ensure that this generated file
 // is compatible with the grpc package it is being compiled against.
-const _ = grpc.SupportPackageIsVersion3
+const _ = grpc.SupportPackageIsVersion4
 
 // Client API for API service
 
@@ -126,7 +134,7 @@ var _API_serviceDesc = grpc.ServiceDesc{
 			ClientStreams: true,
 		},
 	},
-	Metadata: fileDescriptor0,
+	Metadata: "process/protoprocess.proto",
 }
 
 func init() { proto.RegisterFile("process/protoprocess.proto", fileDescriptor0) }
